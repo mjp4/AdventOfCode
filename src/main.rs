@@ -1,6 +1,5 @@
-use aoc::run_solution;
+use aoc::{run_solution,input_file_path, cargo_input_file_path};
 use clap::{load_yaml, App};
-use std::path::Path;
 
 fn main() {
     let yaml = load_yaml!("cli.yaml");
@@ -14,16 +13,13 @@ fn main() {
         day, puzzle, year
     );
 
-    let input_string = format!(
-        "{}/input-{}-day{:02}",
-        matches.value_of("input_dir").unwrap_or("inputs"),
-        year,
-        day
-    );
-    let input_path = Path::new(input_string.as_str());
+    let input_path = match matches.value_of("input_dir") {
+        Some(dir) => input_file_path(year, day, dir),
+        None => cargo_input_file_path(year, day),
+    };
 
     let answer = if input_path.is_file() {
-        run_solution(year, day, puzzle, input_path)
+        run_solution(year, day, puzzle, &input_path)
     } else {
         println!("Input file {} does not exist", input_path.display());
         None
