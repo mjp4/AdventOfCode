@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
+use std::convert::TryInto;
 
 use itertools::Itertools;
 
@@ -20,7 +21,11 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .filter(|tuple: &(usize, usize)| tuple.1 > tuple.0)
                 .count(),
         ),
-        (2021, 2, 1) => Some(
+        (2021, 2, 1) => {
+            println!("Solution no longer available");
+            None
+        }
+        (2021, 2, 2) => Some(
             strings_from_file(input_path)
                 .map(|command_str| Command::from_str(&command_str))
                 .fold(Position::at_zero(), |pos, com| pos.exec_command(com))
@@ -43,7 +48,7 @@ enum CommandMethod {
 #[derive(PartialEq, Debug)]
 struct Command {
     method: CommandMethod,
-    param: usize,
+    param: isize,
 }
 
 impl Command {
@@ -52,15 +57,15 @@ impl Command {
         match split[0] {
             "forward" => Command {
                 method: CommandMethod::Forward,
-                param: split[1].parse::<usize>().unwrap(),
+                param: split[1].parse::<isize>().unwrap(),
             },
             "down" => Command {
                 method: CommandMethod::Down,
-                param: split[1].parse::<usize>().unwrap(),
+                param: split[1].parse::<isize>().unwrap(),
             },
             "up" => Command {
                 method: CommandMethod::Up,
-                param: split[1].parse::<usize>().unwrap(),
+                param: split[1].parse::<isize>().unwrap(),
             },
             _ => panic!("Unknown command"),
         }
@@ -69,34 +74,53 @@ impl Command {
 
 #[derive(PartialEq, Debug)]
 struct Position {
-    x: usize,
-    depth: usize,
+    x: isize,
+    depth: isize,
+    aim: isize,
 }
 
 impl Position {
+    fn new(x: isize, depth: isize, aim: isize) -> Position {
+        Position {
+            x: x,
+            depth: depth,
+            aim: aim,
+        }
+    }
+
     fn at_zero() -> Position {
-        Position { x: 0, depth: 0 }
+        Position {
+            x: 0,
+            depth: 0,
+            aim: 0,
+        }
     }
 
     fn exec_command(&self, command: Command) -> Position {
         match command.method {
-            CommandMethod::Forward => Position {
-                x: self.x + command.param,
-                depth: self.depth,
-            },
-            CommandMethod::Down => Position {
-                x: self.x,
-                depth: self.depth + command.param,
-            },
-            CommandMethod::Up => Position {
-                x: self.x,
-                depth: self.depth - command.param,
-            },
+            CommandMethod::Forward => self
+                .increase_x(command.param)
+                .increase_depth(self.aim * command.param),
+            CommandMethod::Down => self.increase_aim(command.param),
+            CommandMethod::Up => self.increase_aim(-command.param),
         }
     }
 
+    fn increase_x(&self, amount: isize) -> Position {
+        Position::new(self.x + amount, self.depth, self.aim)
+    }
+
+    fn increase_depth(&self, amount: isize) -> Position {
+        Position::new(self.x, self.depth + amount, self.aim)
+    }
+
+    fn increase_aim(&self, amount: isize) -> Position {
+        Position::new(self.x, self.depth, self.aim + amount)
+    }
+
     fn multiply_x_by_depth(&self) -> usize {
-        self.x * self.depth
+        println!("{:?}", self);
+        (self.x * self.depth).try_into().unwrap()
     }
 }
 
@@ -176,7 +200,7 @@ mod tests {
                 .exec_command(Command::from_str("down 8"))
                 .exec_command(Command::from_str("forward 2"))
                 .multiply_x_by_depth(),
-            150
+            900
         )
     }
 }
