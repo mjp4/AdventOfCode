@@ -1,4 +1,4 @@
-use aoc::{run_solution,input_file_path, cargo_input_file_path};
+use aoc::{cargo_input_file_path, input_file_path, run_solution};
 use clap::{load_yaml, App};
 
 fn main() {
