@@ -1,6 +1,6 @@
+mod bitaccumulator;
 mod command;
 mod position;
-mod bitaccumulator;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -8,9 +8,9 @@ use std::path::{Path, PathBuf};
 
 use itertools::Itertools;
 
+use crate::bitaccumulator::{DiagsReport};
 use crate::command::Command;
 use crate::position::Position;
-use crate::bitaccumulator::BitAccumulator;
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
     match (year, day, puzzle) {
@@ -38,11 +38,15 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .fold(Position::at_zero(), |pos, com| pos.exec_command(com))
                 .multiply_x_by_depth(),
         ),
-        (2021, 3, 1) => Some(
-            binary_from_file(input_path)
-                .fold(BitAccumulator::zeroed(12), |ba, bits| ba.accumulate(bits))
-                .multiply_most_by_least()
-        ),
+        (2021, 3, 1) => {
+            let dr = DiagsReport::from_iter(12, binary_from_file(input_path));
+            Some(dr.gamma_rate() * dr.epsilon_rate())
+        }
+        (2021, 3, 2) => {
+            let dr = DiagsReport::from_iter(12, binary_from_file(input_path));
+            Some(dr.oxygen_rate() * dr.co2_scrub_rate())
+        }
+
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -93,5 +97,6 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 1, 1), 1466);
         assert_eq!(run_solution_for_test(2021, 1, 2), 1491);
         assert_eq!(run_solution_for_test(2021, 2, 2), 1947878632);
+        assert_eq!(run_solution_for_test(2021, 3, 1), 4006064);
     }
 }
