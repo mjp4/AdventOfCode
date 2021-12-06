@@ -2,6 +2,7 @@ mod bingo;
 mod bitaccumulator;
 mod command;
 mod coordinates;
+mod lanternfish;
 mod position;
 
 use std::fs::File;
@@ -15,6 +16,7 @@ use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
 use crate::command::Command;
 use crate::coordinates::{GridCounter, LineSegment};
+use crate::lanternfish::LanternShoal;
 use crate::position::Position;
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
@@ -87,7 +89,11 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .into_inner()
                 .multiply_complete_sum_unmarked_by_last_number()
         }
-        (2021, 5, 1) => Some(
+        (2021, 5, 1) => {
+            println!("Solution no longer available");
+            None
+        }
+        (2021, 5, 2) => Some(
             strings_from_file(input_path)
                 .map(|seg_str| LineSegment::from_str(&seg_str).unwrap().coords())
                 .flatten()
@@ -96,6 +102,14 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .filter(|&v| v > 1)
                 .count(),
         ),
+        (2021, 6, 1) => {
+            let input_str = strings_from_file(input_path).next().unwrap();
+            Some(
+                (0..80)
+                    .fold(LanternShoal::from_str(&input_str), |ls, day| ls.next_day())
+                    .count(),
+            )
+        }
         _ => {
             println!("Puzzle solution not yet available");
             None

@@ -66,6 +66,12 @@ impl LineSegment {
         self.end_1.x == self.end_2.x
     }
 
+    pub fn is_45deg(&self) -> bool {
+        let x_diff = self.end_1.x - self.end_2.x;
+        let y_diff = self.end_1.y - self.end_2.y;
+        x_diff * x_diff == y_diff * y_diff
+    }
+
     pub fn coords(&self) -> Vec<Coords> {
         if self.is_horiz() {
             let min_x = cmp::min(self.end_1.x, self.end_2.x);
@@ -79,7 +85,30 @@ impl LineSegment {
             (min_y..=max_y)
                 .map(|y| Coords::xy(self.end_1.x, y))
                 .collect()
+        } else if self.is_45deg() {
+            let min_x = cmp::min(self.end_1.x, self.end_2.x);
+            let max_x = cmp::max(self.end_1.x, self.end_2.x);
+            let min_y = cmp::min(self.end_1.y, self.end_2.y);
+            let max_y = cmp::max(self.end_1.y, self.end_2.y);
+
+            let (y_start, y_step) = if min_x == self.end_1.x {
+                // Left to Right from end_1 to end_2
+                (
+                    self.end_1.y,
+                    (self.end_2.y - self.end_1.y) / (max_y - min_y),
+                )
+            } else {
+                // Left to Right from end_2 to end_1
+                (
+                    self.end_2.y,
+                    (self.end_1.y - self.end_2.y) / (max_y - min_y),
+                )
+            };
+            (min_x..=max_x)
+                .map(|x| Coords::xy(x, y_start + (x - min_x) * y_step))
+                .collect()
         } else {
+            println!("Ignoring {:?}", self);
             vec![]
         }
     }
@@ -176,5 +205,31 @@ mod tests {
         assert_eq!(grid_counter.get(&Coords::xy(1, 1)), 0);
         assert_eq!(grid_counter.get(&Coords::xy(2, 1)), 3);
         assert_eq!(grid_counter.get(&Coords::xy(4, 7)), 1);
+    }
+
+    #[test]
+    fn check_test_input() {
+        assert_eq!(
+            vec![
+                "0,9 -> 5,9",
+                "8,0 -> 0,8",
+                "9,4 -> 3,4",
+                "2,2 -> 2,1",
+                "7,0 -> 7,4",
+                "6,4 -> 2,0",
+                "0,9 -> 2,9",
+                "3,4 -> 1,4",
+                "0,0 -> 8,8",
+                "5,5 -> 8,2"
+            ]
+            .iter()
+            .map(|seg_str| LineSegment::from_str(&seg_str).unwrap().coords())
+            .flatten()
+            .fold(GridCounter::new(), |gc, coords| gc.add_coords(&coords))
+            .into_values()
+            .filter(|&v| v > 1)
+            .count(),
+            12
+        )
     }
 }
