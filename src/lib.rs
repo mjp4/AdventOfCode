@@ -1,3 +1,4 @@
+mod bingo;
 mod bitaccumulator;
 mod command;
 mod position;
@@ -6,9 +7,11 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
+use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 
-use crate::bitaccumulator::{DiagsReport};
+use crate::bingo::BingoState;
+use crate::bitaccumulator::DiagsReport;
 use crate::command::Command;
 use crate::position::Position;
 
@@ -46,7 +49,42 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             let dr = DiagsReport::from_iter(12, binary_from_file(input_path));
             Some(dr.oxygen_rate() * dr.co2_scrub_rate())
         }
+        (2021, 4, 1) => {
+            let mut input_lines = strings_from_file(input_path);
+            let first_line = input_lines.next().unwrap();
+            let mut input_numbers = first_line.split(",").map(|s| s.parse::<usize>()).flatten();
+            let state = BingoState::from_strs(5, input_lines);
 
+            input_numbers
+                .fold_while(state, |bs, next_number| {
+                    let next_state = bs.handle_number(next_number);
+                    if next_state.any_complete() {
+                        Done(next_state)
+                    } else {
+                        Continue(next_state)
+                    }
+                })
+                .into_inner()
+                .multiply_complete_sum_unmarked_by_last_number()
+        }
+        (2021, 4, 2) => {
+            let mut input_lines = strings_from_file(input_path);
+            let first_line = input_lines.next().unwrap();
+            let mut input_numbers = first_line.split(",").map(|s| s.parse::<usize>()).flatten();
+            let state = BingoState::from_strs(5, input_lines);
+
+            input_numbers
+                .fold_while(state, |bs, next_number| {
+                    let next_state = bs.handle_number(next_number);
+                    if next_state.all_complete() {
+                        Done(next_state)
+                    } else {
+                        Continue(next_state)
+                    }
+                })
+                .into_inner()
+                .multiply_complete_sum_unmarked_by_last_number()
+        }
         _ => {
             println!("Puzzle solution not yet available");
             None
