@@ -13,6 +13,7 @@ impl Coords {
         Coords { x, y }
     }
 
+    #[allow(dead_code)]
     pub fn origin() -> Coords {
         Coords::xy(0, 0)
     }
@@ -138,6 +139,7 @@ impl GridCounter {
         GridCounter { grid }
     }
 
+    #[allow(dead_code)]
     pub fn get(&self, coords: &Coords) -> usize {
         *self.grid.get(&coords.as_cartesian_tuple()).unwrap_or(&0)
     }

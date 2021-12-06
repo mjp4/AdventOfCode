@@ -1,13 +1,23 @@
+use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 
 pub struct BingoState {
+    pub input_numbers: Vec<usize>,
     boards: Vec<BingoBoard>,
     last_number: usize,
 }
 
 impl BingoState {
-    pub fn from_strs(chunk_size: usize, input_iter: impl Iterator<Item = String>) -> BingoState {
+    pub fn from_strs(
+        chunk_size: usize,
+        mut input_iter: impl Iterator<Item = String>,
+    ) -> BingoState {
+        let first_line = input_iter.next().unwrap();
         BingoState {
+            input_numbers: first_line
+                .split(',')
+                .flat_map(|s| s.parse::<usize>())
+                .collect(),
             boards: input_iter
                 .chunks(chunk_size)
                 .into_iter()
@@ -17,6 +27,21 @@ impl BingoState {
         }
     }
 
+    pub fn run_until(self, predicate: fn(&BingoState) -> bool) -> BingoState {
+        self.input_numbers
+            .to_owned()
+            .into_iter()
+            .fold_while(self, |bs, next_number| {
+                let next_state = bs.handle_number(next_number);
+                if predicate(&next_state) {
+                    Done(next_state)
+                } else {
+                    Continue(next_state)
+                }
+            })
+            .into_inner()
+    }
+
     pub fn handle_number(self, number: usize) -> BingoState {
         let next_boards: Vec<BingoBoard> = self
             .boards
@@ -24,6 +49,7 @@ impl BingoState {
             .map(|bb| bb.handle_number(number))
             .collect();
         BingoState {
+            input_numbers: self.input_numbers,
             boards: next_boards,
             last_number: number,
         }

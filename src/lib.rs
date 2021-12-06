@@ -9,7 +9,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
-use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 
 use crate::bingo::BingoState;
@@ -53,63 +52,47 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             let dr = DiagsReport::from_iter(12, binary_from_file(input_path));
             Some(dr.oxygen_rate() * dr.co2_scrub_rate())
         }
-        (2021, 4, 1) => {
-            let mut input_lines = strings_from_file(input_path);
-            let first_line = input_lines.next().unwrap();
-            let mut input_numbers = first_line.split(',').map(|s| s.parse::<usize>()).flatten();
-            let state = BingoState::from_strs(5, input_lines);
-
-            input_numbers
-                .fold_while(state, |bs, next_number| {
-                    let next_state = bs.handle_number(next_number);
-                    if next_state.any_complete() {
-                        Done(next_state)
-                    } else {
-                        Continue(next_state)
-                    }
-                })
-                .into_inner()
+        (2021, 4, 1) => Some(
+            BingoState::from_strs(5, strings_from_file(input_path))
+                .run_until(|b| b.any_complete())
                 .multiply_complete_sum_unmarked_by_last_number()
-        }
-        (2021, 4, 2) => {
-            let mut input_lines = strings_from_file(input_path);
-            let first_line = input_lines.next().unwrap();
-            let mut input_numbers = first_line.split(',').map(|s| s.parse::<usize>()).flatten();
-            let state = BingoState::from_strs(5, input_lines);
-
-            input_numbers
-                .fold_while(state, |bs, next_number| {
-                    let next_state = bs.handle_number(next_number);
-                    if next_state.all_complete() {
-                        Done(next_state)
-                    } else {
-                        Continue(next_state)
-                    }
-                })
-                .into_inner()
+                .unwrap(),
+        ),
+        (2021, 4, 2) => Some(
+            BingoState::from_strs(5, strings_from_file(input_path))
+                .run_until(|b| b.all_complete())
                 .multiply_complete_sum_unmarked_by_last_number()
-        }
-        (2021, 5, 1) => {
-            println!("Solution no longer available");
-            None
-        }
-        (2021, 5, 2) => Some(
+                .unwrap(),
+        ),
+        (2021, 5, 1) => Some(
             strings_from_file(input_path)
-                .map(|seg_str| LineSegment::from_str(&seg_str).unwrap().coords())
-                .flatten()
+                .filter_map(|seg_str| LineSegment::from_str(&seg_str).ok())
+                .filter(|ls| ls.is_horiz() || ls.is_vert())
+                .flat_map(|ls| ls.coords())
                 .fold(GridCounter::new(), |gc, coords| gc.add_coords(&coords))
                 .into_values()
                 .filter(|&v| v > 1)
                 .count(),
         ),
-        (2021, 6, 1) => {
-            let input_str = strings_from_file(input_path).next().unwrap();
-            Some(
-                (0..80)
-                    .fold(LanternShoal::from_str(&input_str), |ls, day| ls.next_day())
-                    .count(),
-            )
-        }
+        (2021, 5, 2) => Some(
+            strings_from_file(input_path)
+                .filter_map(|seg_str| LineSegment::from_str(&seg_str).ok())
+                .flat_map(|ls| ls.coords())
+                .fold(GridCounter::new(), |gc, coords| gc.add_coords(&coords))
+                .into_values()
+                .filter(|&v| v > 1)
+                .count(),
+        ),
+        (2021, 6, 1) => Some(
+            LanternShoal::from_str(&single_line_from_file(input_path))
+                .proceed_n_days(80)
+                .count(),
+        ),
+        (2021, 6, 2) => Some(
+            LanternShoal::from_str(&single_line_from_file(input_path))
+                .proceed_n_days(256)
+                .count(),
+        ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -118,23 +101,23 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
 }
 
 fn integers_from_file(input_path: &Path) -> impl Iterator<Item = usize> {
-    strings_from_file(input_path)
-        .map(|s| s.parse::<usize>())
-        .flatten()
+    strings_from_file(input_path).filter_map(|s| s.parse::<usize>().ok())
 }
 
 fn binary_from_file(input_path: &Path) -> impl Iterator<Item = usize> {
-    strings_from_file(input_path)
-        .map(|s| usize::from_str_radix(&s, 2))
-        .flatten()
+    strings_from_file(input_path).filter_map(|s| usize::from_str_radix(&s, 2).ok())
 }
 
 fn strings_from_file(input_path: &Path) -> impl Iterator<Item = String> {
     let file = File::open(input_path).unwrap();
     BufReader::new(file)
         .lines()
-        .map(|line_result| line_result.unwrap())
+        .filter_map(|line_result| line_result.ok())
         .filter(|s| !s.is_empty())
+}
+
+fn single_line_from_file(input_path: &Path) -> String {
+    strings_from_file(input_path).next().unwrap()
 }
 
 pub fn input_file_path(year: usize, day: usize, base_dir: &str) -> PathBuf {
@@ -164,5 +147,9 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 3, 2), 5941884);
         assert_eq!(run_solution_for_test(2021, 4, 1), 2496);
         assert_eq!(run_solution_for_test(2021, 4, 2), 25925);
+        assert_eq!(run_solution_for_test(2021, 5, 1), 5084);
+        assert_eq!(run_solution_for_test(2021, 5, 2), 17882);
+        assert_eq!(run_solution_for_test(2021, 6, 1), 352195);
+        assert_eq!(run_solution_for_test(2021, 6, 2), 1600306001288);
     }
 }
