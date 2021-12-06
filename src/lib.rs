@@ -1,6 +1,7 @@
 mod bingo;
 mod bitaccumulator;
 mod command;
+mod coordinates;
 mod position;
 
 use std::fs::File;
@@ -14,6 +15,7 @@ use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
 use crate::command::Command;
 use crate::position::Position;
+use crate::coordinates::{LineSegment, GridCounter};
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
     match (year, day, puzzle) {
@@ -52,7 +54,7 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
         (2021, 4, 1) => {
             let mut input_lines = strings_from_file(input_path);
             let first_line = input_lines.next().unwrap();
-            let mut input_numbers = first_line.split(",").map(|s| s.parse::<usize>()).flatten();
+            let mut input_numbers = first_line.split(',').map(|s| s.parse::<usize>()).flatten();
             let state = BingoState::from_strs(5, input_lines);
 
             input_numbers
@@ -70,7 +72,7 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
         (2021, 4, 2) => {
             let mut input_lines = strings_from_file(input_path);
             let first_line = input_lines.next().unwrap();
-            let mut input_numbers = first_line.split(",").map(|s| s.parse::<usize>()).flatten();
+            let mut input_numbers = first_line.split(',').map(|s| s.parse::<usize>()).flatten();
             let state = BingoState::from_strs(5, input_lines);
 
             input_numbers
@@ -85,6 +87,17 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .into_inner()
                 .multiply_complete_sum_unmarked_by_last_number()
         }
+        (2021, 5, 1) => Some(
+            strings_from_file(input_path)
+                .map(|seg_str| LineSegment::from_str(&seg_str).unwrap().coords())
+                .flatten()
+                .fold(GridCounter::new(), |gc, coords| {
+                    gc.add_coords(&coords)
+                })
+                .into_values()
+                .filter(|&v| v > 1)
+                .count()
+        ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -136,5 +149,8 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 1, 2), 1491);
         assert_eq!(run_solution_for_test(2021, 2, 2), 1947878632);
         assert_eq!(run_solution_for_test(2021, 3, 1), 4006064);
+        assert_eq!(run_solution_for_test(2021, 3, 2), 5941884);
+        assert_eq!(run_solution_for_test(2021, 4, 1), 2496);
+        assert_eq!(run_solution_for_test(2021, 4, 2), 25925);
     }
 }
