@@ -13,7 +13,7 @@ pub struct Command {
 
 impl Command {
     pub fn from_str(command_as_str: &str) -> Command {
-        let split: Vec<&str> = command_as_str.split(" ").collect();
+        let split: Vec<&str> = command_as_str.split_whitespace().collect();
         match split[0] {
             "forward" => Command {
                 method: CommandMethod::Forward,

@@ -14,8 +14,8 @@ use itertools::Itertools;
 use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
 use crate::command::Command;
+use crate::coordinates::{GridCounter, LineSegment};
 use crate::position::Position;
-use crate::coordinates::{LineSegment, GridCounter};
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
     match (year, day, puzzle) {
@@ -91,12 +91,10 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             strings_from_file(input_path)
                 .map(|seg_str| LineSegment::from_str(&seg_str).unwrap().coords())
                 .flatten()
-                .fold(GridCounter::new(), |gc, coords| {
-                    gc.add_coords(&coords)
-                })
+                .fold(GridCounter::new(), |gc, coords| gc.add_coords(&coords))
                 .into_values()
                 .filter(|&v| v > 1)
-                .count()
+                .count(),
         ),
         _ => {
             println!("Puzzle solution not yet available");

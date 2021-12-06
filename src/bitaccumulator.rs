@@ -6,8 +6,8 @@ pub struct DiagsReport {
 impl DiagsReport {
     pub fn new(digit_count: usize, values: Vec<usize>) -> DiagsReport {
         DiagsReport {
-            digit_count: digit_count,
-            values: values,
+            digit_count,
+            values,
         }
     }
 

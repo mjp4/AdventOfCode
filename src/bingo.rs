@@ -60,11 +60,11 @@ pub struct BingoBoard {
 }
 
 impl BingoBoard {
-    pub fn new(height: usize, width: usize, board: &Vec<usize>) -> BingoBoard {
+    pub fn new(height: usize, width: usize, board: Vec<usize>) -> BingoBoard {
         BingoBoard {
-            height: height,
-            width: width,
-            board: board.to_owned(),
+            height,
+            width,
+            board,
             row_status: vec![(1 << width) - 1; height],
             col_status: vec![(1 << height) - 1; width],
             last_match: None,
@@ -74,23 +74,22 @@ impl BingoBoard {
     pub fn from_strs(strs: Vec<String>) -> BingoBoard {
         let height = strs.len();
         let width = strs[0].split_whitespace().count();
-        let board = strs
+        let board: Vec<usize> = strs
             .iter()
             .map(|v| v.split_whitespace().map(|s| s.parse::<usize>()).flatten())
             .flatten()
             .collect();
-        BingoBoard::new(height, width, &board)
+        BingoBoard::new(height, width, board)
     }
 
     fn locate_number(&self, number: usize) -> Option<Position> {
-        if let Some(position) = self.board.iter().position(|&n| n == number) {
-            Some(Position {
+        self.board
+            .iter()
+            .position(|&n| n == number)
+            .map(|position| Position {
                 row: position / self.height,
                 col: position % self.height,
             })
-        } else {
-            None
-        }
     }
 
     fn mark_pos(self, position: Position, number: usize) -> BingoBoard {
@@ -152,7 +151,7 @@ mod tests {
             19,
         ];
         assert_eq!(
-            BingoBoard::new(5, 5, &board)
+            BingoBoard::new(5, 5, board.to_owned())
                 .handle_number(6)
                 .handle_number(10)
                 .handle_number(3)
@@ -162,7 +161,7 @@ mod tests {
             true
         );
         assert_eq!(
-            BingoBoard::new(5, 5, &board)
+            BingoBoard::new(5, 5, board.to_owned())
                 .handle_number(17)
                 .handle_number(23)
                 .handle_number(14)
@@ -172,7 +171,7 @@ mod tests {
             true
         );
         assert_eq!(
-            BingoBoard::new(5, 5, &board)
+            BingoBoard::new(5, 5, board.to_owned())
                 .handle_number(1)
                 .handle_number(2)
                 .handle_number(3)

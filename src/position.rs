@@ -11,11 +11,7 @@ pub struct Position {
 
 impl Position {
     pub fn new(x: isize, depth: isize, aim: isize) -> Position {
-        Position {
-            x: x,
-            depth: depth,
-            aim: aim,
-        }
+        Position { x, depth, aim }
     }
 
     pub fn at_zero() -> Position {

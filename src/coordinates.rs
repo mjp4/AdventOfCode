@@ -70,11 +70,15 @@ impl LineSegment {
         if self.is_horiz() {
             let min_x = cmp::min(self.end_1.x, self.end_2.x);
             let max_x = cmp::max(self.end_1.x, self.end_2.x);
-            (min_x..=max_x).map(|x| Coords::xy(x, self.end_1.y)).collect()
+            (min_x..=max_x)
+                .map(|x| Coords::xy(x, self.end_1.y))
+                .collect()
         } else if self.is_vert() {
             let min_y = cmp::min(self.end_1.y, self.end_2.y);
             let max_y = cmp::max(self.end_1.y, self.end_2.y);
-            (min_y..=max_y).map(|y| Coords::xy(self.end_1.x, y)).collect()
+            (min_y..=max_y)
+                .map(|y| Coords::xy(self.end_1.x, y))
+                .collect()
         } else {
             vec![]
         }
@@ -94,20 +98,22 @@ pub struct GridCounter {
 
 impl GridCounter {
     pub fn new() -> GridCounter {
-        GridCounter { grid: HashMap::new() }
+        GridCounter {
+            grid: HashMap::new(),
+        }
     }
 
     pub fn add_coords(self, coords: &Coords) -> GridCounter {
         let mut grid = self.grid;
         *grid.entry(coords.as_cartesian_tuple()).or_default() += 1;
-        GridCounter {grid}
+        GridCounter { grid }
     }
 
     pub fn get(&self, coords: &Coords) -> usize {
         *self.grid.get(&coords.as_cartesian_tuple()).unwrap_or(&0)
     }
 
-    pub fn into_values(self) -> impl Iterator<Item=usize> {
+    pub fn into_values(self) -> impl Iterator<Item = usize> {
         self.grid.into_values()
     }
 }
@@ -160,16 +166,15 @@ mod tests {
     #[test]
     fn check_grid_counter() {
         let grid_counter = GridCounter::new()
-            .add_coords(&Coords::xy(5,3))
-            .add_coords(&Coords::xy(2,1))
-            .add_coords(&Coords::xy(5,3))
-            .add_coords(&Coords::xy(2,1))
-            .add_coords(&Coords::xy(2,1))
-            .add_coords(&Coords::xy(4,7));
-        assert_eq!(grid_counter.get(&Coords::xy(5,3)), 2);
-        assert_eq!(grid_counter.get(&Coords::xy(1,1)), 0);
-        assert_eq!(grid_counter.get(&Coords::xy(2,1)), 3);
-        assert_eq!(grid_counter.get(&Coords::xy(4,7)), 1);
+            .add_coords(&Coords::xy(5, 3))
+            .add_coords(&Coords::xy(2, 1))
+            .add_coords(&Coords::xy(5, 3))
+            .add_coords(&Coords::xy(2, 1))
+            .add_coords(&Coords::xy(2, 1))
+            .add_coords(&Coords::xy(4, 7));
+        assert_eq!(grid_counter.get(&Coords::xy(5, 3)), 2);
+        assert_eq!(grid_counter.get(&Coords::xy(1, 1)), 0);
+        assert_eq!(grid_counter.get(&Coords::xy(2, 1)), 3);
+        assert_eq!(grid_counter.get(&Coords::xy(4, 7)), 1);
     }
-
 }
