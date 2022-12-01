@@ -1,5 +1,6 @@
 mod bingo;
 mod bitaccumulator;
+mod calories;
 mod command;
 mod coordinates;
 mod crabs;
@@ -16,6 +17,7 @@ use itertools::Itertools;
 
 use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
+use crate::calories::CalorieCounter;
 use crate::command::Command;
 use crate::coordinates::{GridCounter, LineSegment};
 use crate::lanternfish::LanternShoal;
@@ -157,6 +159,16 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                             .0
                 }),
         ),
+        (2022, 1, 1) => Some(
+            file_lines_as_strings(input_path)
+                .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
+                .max,
+        ),
+        (2022, 1, 2) => Some(
+            file_lines_as_strings(input_path)
+                .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
+                .top_three_sum(),
+        ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -219,5 +231,6 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 7, 2), 92881128);
         assert_eq!(run_solution_for_test(2021, 8, 1), 397);
         assert_eq!(run_solution_for_test(2021, 8, 2), 1027422);
+        assert_eq!(run_solution_for_test(2022, 1, 1), 71506);
     }
 }
