@@ -20,7 +20,7 @@ use crate::command::Command;
 use crate::coordinates::{GridCounter, LineSegment};
 use crate::lanternfish::LanternShoal;
 use crate::position::Position;
-use crate::segment_display::{SegmentMapping, SegmentDisplay};
+use crate::segment_display::{SegmentDisplay, SegmentMapping};
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
     match (year, day, puzzle) {
@@ -43,7 +43,7 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             None
         }
         (2021, 2, 2) => Some(
-            strings_from_file(input_path)
+            nonempty_file_lines_as_strings(input_path)
                 .map(|command_str| Command::from_str(&command_str))
                 .fold(Position::at_zero(), |pos, com| pos.exec_command(com))
                 .multiply_x_by_depth(),
@@ -57,19 +57,19 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             Some(dr.oxygen_rate() * dr.co2_scrub_rate())
         }
         (2021, 4, 1) => Some(
-            BingoState::from_strs(5, strings_from_file(input_path))
+            BingoState::from_strs(5, nonempty_file_lines_as_strings(input_path))
                 .run_until(|b| b.any_complete())
                 .multiply_complete_sum_unmarked_by_last_number()
                 .unwrap(),
         ),
         (2021, 4, 2) => Some(
-            BingoState::from_strs(5, strings_from_file(input_path))
+            BingoState::from_strs(5, nonempty_file_lines_as_strings(input_path))
                 .run_until(|b| b.all_complete())
                 .multiply_complete_sum_unmarked_by_last_number()
                 .unwrap(),
         ),
         (2021, 5, 1) => Some(
-            strings_from_file(input_path)
+            nonempty_file_lines_as_strings(input_path)
                 .filter_map(|seg_str| LineSegment::from_str(&seg_str).ok())
                 .filter(|ls| ls.is_horiz() || ls.is_vert())
                 .flat_map(|ls| ls.coords())
@@ -79,7 +79,7 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .count(),
         ),
         (2021, 5, 2) => Some(
-            strings_from_file(input_path)
+            nonempty_file_lines_as_strings(input_path)
                 .filter_map(|seg_str| LineSegment::from_str(&seg_str).ok())
                 .flat_map(|ls| ls.coords())
                 .fold(GridCounter::new(), |gc, coords| gc.add_coords(&coords))
@@ -112,7 +112,7 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             Some(min_cost.into_inner())
         }
         (2021, 8, 1) => Some(
-            strings_from_file(input_path)
+            nonempty_file_lines_as_strings(input_path)
                 .filter_map(|display| {
                     display
                         .split(" | ")
@@ -120,7 +120,8 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                         .collect_tuple::<(_, _)>()
                 })
                 .fold(0, |outer_count, (input_segs, output_segs)| {
-                    let mapping = SegmentMapping::find_valid(&input_segs).expect("No valid mapping");
+                    let mapping =
+                        SegmentMapping::find_valid(&input_segs).expect("No valid mapping");
                     outer_count
                         + output_segs.iter().fold(0, |count, seg| {
                             match SegmentDisplay::from_str_with_mapping(seg, &mapping).to_int() {
@@ -131,7 +132,7 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 }),
         ),
         (2021, 8, 2) => Some(
-            strings_from_file(input_path)
+            nonempty_file_lines_as_strings(input_path)
                 .filter_map(|display| {
                     display
                         .split(" | ")
@@ -139,16 +140,23 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                         .collect_tuple::<(_, _)>()
                 })
                 .fold(0, |outer_sum, (input_segs, output_segs)| {
-                    let mapping = SegmentMapping::find_valid(&input_segs).expect("No valid mapping");
+                    let mapping =
+                        SegmentMapping::find_valid(&input_segs).expect("No valid mapping");
                     outer_sum
-                        + output_segs.iter().fold((0, 1000), |(sum, pos), seg| {
-                            (sum + SegmentDisplay::from_str_with_mapping(seg, &mapping).to_int().unwrap() * pos, pos / 10)
-                        }).0
-                })
+                        + output_segs
+                            .iter()
+                            .fold((0, 1000), |(sum, pos), seg| {
+                                (
+                                    sum + SegmentDisplay::from_str_with_mapping(seg, &mapping)
+                                        .to_int()
+                                        .unwrap()
+                                        * pos,
+                                    pos / 10,
+                                )
+                            })
+                            .0
+                }),
         ),
-        (2021, 9, 1) => Some(
-            0
-            ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -157,23 +165,24 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
 }
 
 fn integers_from_file(input_path: &Path) -> impl Iterator<Item = usize> {
-    strings_from_file(input_path).filter_map(|s| s.parse::<usize>().ok())
+    file_lines_as_strings(input_path).filter_map(|s| s.parse::<usize>().ok())
 }
 
 fn binary_from_file(input_path: &Path) -> impl Iterator<Item = usize> {
-    strings_from_file(input_path).filter_map(|s| usize::from_str_radix(&s, 2).ok())
+    file_lines_as_strings(input_path).filter_map(|s| usize::from_str_radix(&s, 2).ok())
 }
 
-fn strings_from_file(input_path: &Path) -> impl Iterator<Item = String> {
+fn nonempty_file_lines_as_strings(input_path: &Path) -> impl Iterator<Item = String> {
+    file_lines_as_strings(input_path).filter(|s| !s.is_empty())
+}
+
+fn file_lines_as_strings(input_path: &Path) -> impl Iterator<Item = String> {
     let file = File::open(input_path).unwrap();
-    BufReader::new(file)
-        .lines()
-        .filter_map(|line_result| line_result.ok())
-        .filter(|s| !s.is_empty())
+    BufReader::new(file).lines().filter_map(|l| l.ok())
 }
 
 fn single_line_from_file(input_path: &Path) -> String {
-    strings_from_file(input_path).next().unwrap()
+    file_lines_as_strings(input_path).next().unwrap()
 }
 
 pub fn input_file_path(year: usize, day: usize, base_dir: &str) -> PathBuf {
