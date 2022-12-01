@@ -2,8 +2,11 @@ mod bingo;
 mod bitaccumulator;
 mod command;
 mod coordinates;
+mod crabs;
 mod lanternfish;
 mod position;
+mod segment_display;
+mod valuemap;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -17,6 +20,7 @@ use crate::command::Command;
 use crate::coordinates::{GridCounter, LineSegment};
 use crate::lanternfish::LanternShoal;
 use crate::position::Position;
+use crate::segment_display::{SegmentMapping, SegmentDisplay};
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
     match (year, day, puzzle) {
@@ -93,6 +97,58 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .proceed_n_days(256)
                 .count(),
         ),
+        (2021, 7, 1) => {
+            println!("Solution no longer available");
+            None
+        }
+        (2021, 7, 2) => {
+            let inputs: Vec<usize> = single_line_from_file(input_path)
+                .split(',')
+                .filter_map(|s| s.parse::<usize>().ok())
+                .collect();
+            let min_cost = (0..).fold_while(usize::MAX, |old_cost, new_position| {
+                crabs::fold_step(&inputs, old_cost, new_position)
+            });
+            Some(min_cost.into_inner())
+        }
+        (2021, 8, 1) => Some(
+            strings_from_file(input_path)
+                .filter_map(|display| {
+                    display
+                        .split(" | ")
+                        .map(|segments| segments.split(' ').map(|s| s.to_string()).collect_vec())
+                        .collect_tuple::<(_, _)>()
+                })
+                .fold(0, |outer_count, (input_segs, output_segs)| {
+                    let mapping = SegmentMapping::find_valid(&input_segs).expect("No valid mapping");
+                    outer_count
+                        + output_segs.iter().fold(0, |count, seg| {
+                            match SegmentDisplay::from_str_with_mapping(seg, &mapping).to_int() {
+                                Some(1) | Some(4) | Some(7) | Some(8) => count + 1,
+                                _ => count,
+                            }
+                        })
+                }),
+        ),
+        (2021, 8, 2) => Some(
+            strings_from_file(input_path)
+                .filter_map(|display| {
+                    display
+                        .split(" | ")
+                        .map(|segments| segments.split(' ').map(|s| s.to_string()).collect_vec())
+                        .collect_tuple::<(_, _)>()
+                })
+                .fold(0, |outer_sum, (input_segs, output_segs)| {
+                    let mapping = SegmentMapping::find_valid(&input_segs).expect("No valid mapping");
+                    outer_sum
+                        + output_segs.iter().fold((0, 1000), |(sum, pos), seg| {
+                            (sum + SegmentDisplay::from_str_with_mapping(seg, &mapping).to_int().unwrap() * pos, pos / 10)
+                        }).0
+                })
+        ),
+        (2021, 9, 1) => Some(
+            0
+            ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -151,5 +207,8 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 5, 2), 17882);
         assert_eq!(run_solution_for_test(2021, 6, 1), 352195);
         assert_eq!(run_solution_for_test(2021, 6, 2), 1600306001288);
+        assert_eq!(run_solution_for_test(2021, 7, 2), 92881128);
+        assert_eq!(run_solution_for_test(2021, 8, 1), 397);
+        assert_eq!(run_solution_for_test(2021, 8, 2), 1027422);
     }
 }

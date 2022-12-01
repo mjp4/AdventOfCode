@@ -1,5 +1,6 @@
 use aoc::{cargo_input_file_path, input_file_path, run_solution};
 use clap::{load_yaml, App};
+use std::time::Instant;
 
 fn main() {
     let yaml = load_yaml!("cli.yaml");
@@ -18,15 +19,17 @@ fn main() {
         None => cargo_input_file_path(year, day),
     };
 
+    let now = Instant::now();
     let answer = if input_path.is_file() {
         run_solution(year, day, puzzle, &input_path)
     } else {
         println!("Input file {} does not exist", input_path.display());
         None
     };
+    let duration = now.elapsed().as_micros();
 
     if let Some(a) = answer {
         println!();
-        println!("ANSWER: {}", a)
+        println!("ANSWER: {} in {} microseconds", a, duration)
     }
 }
