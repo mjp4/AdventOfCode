@@ -65,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn day_1_2002_example() {
+    fn day_1_2022_example() {
         let input_lines = "1000
 2000
 3000
@@ -89,4 +89,26 @@ mod tests {
             24000
         )
     }
+    #[test]
+    fn day_1_2022_bossmc_example() {
+        let input_lines = "100
+
+200
+
+50
+50
+50
+50
+50
+50"
+            .lines();
+        assert_eq!(
+            input_lines
+                .map(|s| s.to_string())
+                .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
+                .top_three_sum(),
+            600
+        )
+    }
+
 }

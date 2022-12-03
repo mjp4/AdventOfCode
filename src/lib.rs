@@ -232,5 +232,6 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 8, 1), 397);
         assert_eq!(run_solution_for_test(2021, 8, 2), 1027422);
         assert_eq!(run_solution_for_test(2022, 1, 1), 71506);
+        assert_eq!(run_solution_for_test(2022, 1, 2), 209603);
     }
 }
