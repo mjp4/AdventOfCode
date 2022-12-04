@@ -171,7 +171,11 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                 .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
                 .top_three_sum(),
         ),
-        (2022, 2, 1) => Some(
+        (2022, 2, 1) => {
+            println!("Solution no longer available");
+            None
+        },
+        (2022, 2, 2) => Some(
             file_lines_as_strings(input_path)
                 .fold(0, |cum, s| cum + score_guide_round(&s))
         ),

@@ -34,11 +34,18 @@ pub fn score_guide_round(input_str: &str) -> usize {
         "C" => Action::Scissors,
         _ => panic!("Invalid input")
     };
-    let me = match caps.get(2).unwrap().as_str() {
-        "X" => Action::Rock,
-        "Y" => Action::Paper,
-        "Z" => Action::Scissors,
+    let required_result = match caps.get(2).unwrap().as_str() {
+        "X" => RoundResult::Loss,
+        "Y" => RoundResult::Draw,
+        "Z" => RoundResult::Win,
         _ => panic!("Invalid input")
+    };
+    let me = if required_result == play_round(&them, &Action::Rock) {
+        Action::Rock
+    } else if required_result == play_round(&them, &Action::Paper) {
+        Action::Paper
+    } else {
+        Action::Scissors
     };
 
     let round_score = match play_round(&them, &me) {
