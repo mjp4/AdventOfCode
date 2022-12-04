@@ -6,6 +6,7 @@ mod coordinates;
 mod crabs;
 mod lanternfish;
 mod position;
+mod rockpaperscissors;
 mod segment_display;
 mod valuemap;
 
@@ -22,6 +23,7 @@ use crate::command::Command;
 use crate::coordinates::{GridCounter, LineSegment};
 use crate::lanternfish::LanternShoal;
 use crate::position::Position;
+use crate::rockpaperscissors::score_guide_round;
 use crate::segment_display::{SegmentDisplay, SegmentMapping};
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
@@ -168,6 +170,10 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
             file_lines_as_strings(input_path)
                 .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
                 .top_three_sum(),
+        ),
+        (2022, 2, 1) => Some(
+            file_lines_as_strings(input_path)
+                .fold(0, |cum, s| cum + score_guide_round(&s))
         ),
         _ => {
             println!("Puzzle solution not yet available");

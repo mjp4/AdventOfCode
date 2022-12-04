@@ -10,3 +10,4 @@ publish = ["metaswitch"]
 [dependencies]
 clap = { version = "3.0.0-beta.5", features = ["yaml"] }
 itertools = "0.10.1"
+regex = "1.7.0"
