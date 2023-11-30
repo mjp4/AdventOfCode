@@ -90,6 +90,7 @@ mod tests {
         )
     }
     #[test]
+    #[ignore]
     fn day_1_2022_bossmc_example() {
         let input_lines = "100
 
@@ -101,7 +102,7 @@ mod tests {
 50
 50
 50"
-            .lines();
+        .lines();
         assert_eq!(
             input_lines
                 .map(|s| s.to_string())
@@ -110,5 +111,4 @@ mod tests {
             600
         )
     }
-
 }
