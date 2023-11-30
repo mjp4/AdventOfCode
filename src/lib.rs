@@ -7,6 +7,7 @@ mod crabs;
 mod lanternfish;
 mod position;
 mod rockpaperscissors;
+mod rucksacks;
 mod segment_display;
 mod valuemap;
 
@@ -177,8 +178,21 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
         },
         (2022, 2, 2) => Some(
             file_lines_as_strings(input_path)
-                .fold(0, |cum, s| cum + score_guide_round(&s))
+                .map(|s| score_guide_round(&s))
+                .sum()
         ),
+        (2022, 3, 1) => Some(
+            0
+        ),
+        (2022, 3, 2) => Some(
+            0
+        ),
+        // (2022, 3, 1) => Some(
+        //     0
+        // ),
+        // (2022, 3, 2) => Some(
+        //     0
+        // ),
         _ => {
             println!("Puzzle solution not yet available");
             None
