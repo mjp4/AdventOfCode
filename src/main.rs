@@ -1,5 +1,6 @@
-use aoc::{cargo_input_file_path, input_file_path, run_solution};
+use aoc::{cargo_input_file_path, file_lines_as_strings, run_solution};
 use clap::{load_yaml, App};
+use std::path::PathBuf;
 use std::time::Instant;
 
 fn main() {
@@ -14,14 +15,15 @@ fn main() {
         day, puzzle, year
     );
 
-    let input_path = match matches.value_of("input_dir") {
-        Some(dir) => input_file_path(year, day, dir),
+    let input_path = match matches.value_of("input") {
+        Some(input) => PathBuf::from(input),
         None => cargo_input_file_path(year, day),
     };
 
     let now = Instant::now();
     let answer = if input_path.is_file() {
-        run_solution(year, day, puzzle, &input_path)
+        let input_lines = file_lines_as_strings(&input_path);
+        run_solution(year, day, puzzle, input_lines)
     } else {
         println!("Input file {} does not exist", input_path.display());
         None
