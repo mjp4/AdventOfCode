@@ -1,10 +1,13 @@
 mod bingo;
 mod bitaccumulator;
+mod calories;
 mod command;
 mod coordinates;
 mod crabs;
 mod lanternfish;
 mod position;
+mod rockpaperscissors;
+mod rucksacks;
 mod segment_display;
 mod valuemap;
 
@@ -16,10 +19,12 @@ use itertools::Itertools;
 
 use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
+use crate::calories::CalorieCounter;
 use crate::command::Command;
 use crate::coordinates::{GridCounter, LineSegment};
 use crate::lanternfish::LanternShoal;
 use crate::position::Position;
+use crate::rockpaperscissors::score_guide_round;
 use crate::segment_display::{SegmentDisplay, SegmentMapping};
 
 pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -> Option<usize> {
@@ -157,6 +162,37 @@ pub fn run_solution(year: usize, day: usize, puzzle: usize, input_path: &Path) -
                             .0
                 }),
         ),
+        (2022, 1, 1) => Some(
+            file_lines_as_strings(input_path)
+                .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
+                .max,
+        ),
+        (2022, 1, 2) => Some(
+            file_lines_as_strings(input_path)
+                .fold(CalorieCounter::reset(), CalorieCounter::fold_step)
+                .top_three_sum(),
+        ),
+        (2022, 2, 1) => {
+            println!("Solution no longer available");
+            None
+        },
+        (2022, 2, 2) => Some(
+            file_lines_as_strings(input_path)
+                .map(|s| score_guide_round(&s))
+                .sum()
+        ),
+        (2022, 3, 1) => Some(
+            0
+        ),
+        (2022, 3, 2) => Some(
+            0
+        ),
+        // (2022, 3, 1) => Some(
+        //     0
+        // ),
+        // (2022, 3, 2) => Some(
+        //     0
+        // ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -219,5 +255,7 @@ mod tests {
         assert_eq!(run_solution_for_test(2021, 7, 2), 92881128);
         assert_eq!(run_solution_for_test(2021, 8, 1), 397);
         assert_eq!(run_solution_for_test(2021, 8, 2), 1027422);
+        assert_eq!(run_solution_for_test(2022, 1, 1), 71506);
+        assert_eq!(run_solution_for_test(2022, 1, 2), 209603);
     }
 }

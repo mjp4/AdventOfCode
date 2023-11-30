@@ -6,7 +6,7 @@ fn main() {
     let yaml = load_yaml!("cli.yaml");
     let matches = App::from(yaml).get_matches();
 
-    let year: usize = matches.value_of_t("year").unwrap_or(2021);
+    let year: usize = matches.value_of_t("year").unwrap_or(2022);
     let day: usize = matches.value_of_t("DAY").unwrap_or(1);
     let puzzle: usize = matches.value_of_t("PUZZLE").unwrap_or(1);
     println!(
