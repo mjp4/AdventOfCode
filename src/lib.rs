@@ -17,6 +17,7 @@ use std::convert::TryInto;
 
 use itertools::Itertools;
 use regex::Regex;
+use anyhow::{anyhow, Result};
 
 use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
@@ -188,10 +189,10 @@ pub fn run_solution(
         (2022, 4, 1) => None,
         (2022, 4, 2) => None,
         (2023, 1, 1) => Some(
-            input_strings.map(|s| fix_calibration_line(&s)).sum()
+            input_strings.map(|s| fix_calibration_line(&s).expect(&s)).sum()
             ),
         (2023, 1, 2) => Some(
-            input_strings.map(|s| fix_calibration_line_with_string_digits(&s)).sum()
+            input_strings.map(|s| fix_calibration_line_with_string_digits(&s).expect(&s)).sum()
             ),
         _ => {
             println!("Puzzle solution not yet available");
@@ -200,35 +201,37 @@ pub fn run_solution(
     }
 }
 
-fn fix_calibration_line(s: &str) -> usize {
+fn fix_calibration_line(s: &str) -> Result<usize> {
     let mut iterator = s.chars().filter_map(|c| c.to_digit(10)).peekable();
-    let first_digit = iterator.peek().unwrap().clone();
-    let last_digit = iterator.last().unwrap();
-    (first_digit * 10 + last_digit).try_into().unwrap()
+    let first_digit = iterator.peek().ok_or(anyhow!("No first digit"))?.clone();
+    let last_digit = iterator.last().ok_or(anyhow!("No last digit"))?;
+    Ok((first_digit * 10 + last_digit).try_into()?)
 }
 
-fn fix_calibration_line_with_string_digits(s: &str) -> usize {
-    let digit_regex = Regex::new("one|two|three|four|five|six|seven|eight|nine|[0-9]").unwrap();
-    let first_digit = to_digit_incl_text(digit_regex.find(s).unwrap().as_str());
+fn fix_calibration_line_with_string_digits(s: &str) -> Result<usize> {
+    let first_digit_regex = Regex::new("one|two|three|four|five|six|seven|eight|nine|[0-9]")?;
+    let last_digit_regex = Regex::new("(?:.*)(one|two|three|four|five|six|seven|eight|nine|[0-9])")?;
+    let first_digit = to_digit_incl_text(first_digit_regex.find(s).ok_or(anyhow!("No first digit"))?.as_str())?;
     let last_digit = to_digit_incl_text(
-        Regex::new("(?:.*)(one|two|three|four|five|six|seven|eight|nine|[0-9])").unwrap().captures(s).unwrap().get(1).unwrap().as_str()
-        );
-    (first_digit * 10 + last_digit).try_into().unwrap()
+        last_digit_regex.captures(s).ok_or(anyhow!("No last digit"))?
+        .get(1).ok_or(anyhow!("No last digit"))?.as_str()
+    )?;
+    Ok((first_digit * 10 + last_digit).try_into()?)
 }
 
-fn to_digit_incl_text(s: &str) -> usize {
+fn to_digit_incl_text(s: &str) -> Result<usize> {
     match s {
-        "0" => 0,
-        "one" | "1" => 1,
-        "two" | "2" => 2,
-        "three" | "3" => 3,
-        "four" | "4" => 4,
-        "five" | "5" => 5,
-        "six" | "6" => 6,
-        "seven" | "7" => 7,
-        "eight" | "8" => 8,
-        "nine" | "9" => 9,
-        _ => panic!()
+        "0" => Ok(0),
+        "one" | "1" => Ok(1),
+        "two" | "2" => Ok(2),
+        "three" | "3" => Ok(3),
+        "four" | "4" => Ok(4),
+        "five" | "5" => Ok(5),
+        "six" | "6" => Ok(6),
+        "seven" | "7" => Ok(7),
+        "eight" | "8" => Ok(8),
+        "nine" | "9" => Ok(9),
+        _ => Err(anyhow!("Invalid digit"))
     }
 }
 
