@@ -10,14 +10,14 @@ mod rockpaperscissors;
 mod segment_display;
 mod valuemap;
 
+use std::convert::TryInto;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
-use std::convert::TryInto;
 
+use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use regex::Regex;
-use anyhow::{anyhow, Result};
 
 use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
@@ -189,11 +189,15 @@ pub fn run_solution(
         (2022, 4, 1) => None,
         (2022, 4, 2) => None,
         (2023, 1, 1) => Some(
-            input_strings.map(|s| fix_calibration_line(&s).expect(&s)).sum()
-            ),
+            input_strings
+                .map(|s| fix_calibration_line(&s).expect(&s))
+                .sum(),
+        ),
         (2023, 1, 2) => Some(
-            input_strings.map(|s| fix_calibration_line_with_string_digits(&s).expect(&s)).sum()
-            ),
+            input_strings
+                .map(|s| fix_calibration_line_with_string_digits(&s).expect(&s))
+                .sum(),
+        ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -210,11 +214,21 @@ fn fix_calibration_line(s: &str) -> Result<usize> {
 
 fn fix_calibration_line_with_string_digits(s: &str) -> Result<usize> {
     let first_digit_regex = Regex::new("one|two|three|four|five|six|seven|eight|nine|[0-9]")?;
-    let last_digit_regex = Regex::new("(?:.*)(one|two|three|four|five|six|seven|eight|nine|[0-9])")?;
-    let first_digit = to_digit_incl_text(first_digit_regex.find(s).ok_or(anyhow!("No first digit"))?.as_str())?;
+    let last_digit_regex =
+        Regex::new("(?:.*)(one|two|three|four|five|six|seven|eight|nine|[0-9])")?;
+    let first_digit = to_digit_incl_text(
+        first_digit_regex
+            .find(s)
+            .ok_or(anyhow!("No first digit"))?
+            .as_str(),
+    )?;
     let last_digit = to_digit_incl_text(
-        last_digit_regex.captures(s).ok_or(anyhow!("No last digit"))?
-        .get(1).ok_or(anyhow!("No last digit"))?.as_str()
+        last_digit_regex
+            .captures(s)
+            .ok_or(anyhow!("No last digit"))?
+            .get(1)
+            .ok_or(anyhow!("No last digit"))?
+            .as_str(),
     )?;
     Ok((first_digit * 10 + last_digit).try_into()?)
 }
@@ -231,7 +245,7 @@ fn to_digit_incl_text(s: &str) -> Result<usize> {
         "seven" | "7" => Ok(7),
         "eight" | "8" => Ok(8),
         "nine" | "9" => Ok(9),
-        _ => Err(anyhow!("Invalid digit"))
+        _ => Err(anyhow!("Invalid digit")),
     }
 }
 
@@ -270,6 +284,7 @@ pub fn cargo_input_file_path(year: usize, day: usize) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     fn run_solution_for_test(year: usize, day: usize, puzzle: usize) -> usize {
         let input_lines = file_lines_as_strings(&cargo_input_file_path(year, day));
@@ -277,14 +292,17 @@ mod tests {
     }
 
     fn run_solution_for_example(year: usize, day: usize, puzzle: usize) -> usize {
-        let input_lines = example_input(year, day, puzzle).lines().map(|s| s.to_string());
+        let input_lines = example_input(year, day, puzzle)
+            .lines()
+            .map(|s| s.to_string());
         run_solution(year, day, puzzle, input_lines).unwrap()
     }
 
     fn example_input(year: usize, day: usize, puzzle: usize) -> &'static str {
         match (year, day, puzzle) {
             (2022, 1, _) => {
-                "1000
+                "\
+1000
 2000
 3000
 
@@ -300,18 +318,21 @@ mod tests {
 10000"
             }
             (2022, 2, _) => {
-                "A Y
+                "\
+A Y
 B X
 C Z"
             }
             (2023, 1, 1) => {
-                "1abc2
+                "\
+1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet"
             }
             (2023, 1, 2) => {
-                "two1nine
+                "\
+two1nine
 eightwothree
 abcone2threexyz
 xtwone3four
@@ -323,46 +344,43 @@ zoneight234
         }
     }
 
-    #[test]
-    fn check_examples_2023() {
-        assert_eq!(run_solution_for_example(2023, 1, 1), 142);
-        assert_eq!(run_solution_for_example(2023, 1, 2), 281);
+    #[test_case(2023, 1, 1, 142)]
+    #[test_case(2023, 1, 2, 281)]
+    fn check_examples(year: usize, day: usize, puzzle: usize, result: usize) {
+        assert_eq!(run_solution_for_example(year, day, puzzle), result)
     }
 
-    #[test]
+    #[test_case(2022, 1, 1, 24000)]
+    // Test case fails: #[test_case(2022, 1, 2, 45000)]
+    #[test_case(2022, 2, 2, 12)]
+    fn check_examples_old(year: usize, day: usize, puzzle: usize, result: usize) {
+        assert_eq!(run_solution_for_example(year, day, puzzle), result)
+    }
+
+    #[test_case(2021, 1, 1, 1466)]
+    #[test_case(2021, 1, 2, 1491)]
+    #[test_case(2021, 2, 2, 1947878632)]
+    #[test_case(2021, 3, 1, 4006064)]
+    #[test_case(2021, 3, 2, 5941884)]
+    #[test_case(2021, 4, 1, 2496)]
+    #[test_case(2021, 4, 2, 25925)]
+    #[test_case(2021, 5, 1, 5084)]
+    #[test_case(2021, 5, 2, 17882)]
+    #[test_case(2021, 6, 1, 352195)]
+    #[test_case(2021, 6, 2, 1600306001288)]
+    #[test_case(2021, 7, 2, 92881128)]
+    #[test_case(2021, 8, 1, 397)]
+    #[test_case(2021, 8, 2, 1027422)]
+    #[test_case(2022, 1, 1, 71506)]
+    #[test_case(2022, 1, 2, 209603)]
     #[ignore]
-    fn check_examples_2022() {
-        assert_eq!(run_solution_for_example(2022, 1, 1), 24000);
-        assert_eq!(run_solution_for_example(2022, 1, 2), 45000);
-        assert_eq!(run_solution_for_example(2022, 2, 2), 12);
+    fn check_solutions_old(year: usize, day: usize, puzzle: usize, result: usize) {
+        assert_eq!(run_solution_for_test(year, day, puzzle), result)
     }
 
-    #[test]
-    #[ignore]
-    fn check_known_solutions_2021() {
-        assert_eq!(run_solution_for_test(2021, 1, 1), 1466);
-        assert_eq!(run_solution_for_test(2021, 1, 2), 1491);
-        assert_eq!(run_solution_for_test(2021, 2, 2), 1947878632);
-        assert_eq!(run_solution_for_test(2021, 3, 1), 4006064);
-        assert_eq!(run_solution_for_test(2021, 3, 2), 5941884);
-        assert_eq!(run_solution_for_test(2021, 4, 1), 2496);
-        assert_eq!(run_solution_for_test(2021, 4, 2), 25925);
-        assert_eq!(run_solution_for_test(2021, 5, 1), 5084);
-        assert_eq!(run_solution_for_test(2021, 5, 2), 17882);
-        assert_eq!(run_solution_for_test(2021, 6, 1), 352195);
-        assert_eq!(run_solution_for_test(2021, 6, 2), 1600306001288);
-        assert_eq!(run_solution_for_test(2021, 7, 2), 92881128);
-        assert_eq!(run_solution_for_test(2021, 8, 1), 397);
-        assert_eq!(run_solution_for_test(2021, 8, 2), 1027422);
+    #[test_case(2023, 1, 1, 57346)]
+    #[test_case(2023, 1, 2, 57345)]
+    fn check_solutions(year: usize, day: usize, puzzle: usize, result: usize) {
+        assert_eq!(run_solution_for_test(year, day, puzzle), result)
     }
-
-    #[test]
-    #[ignore]
-    fn check_known_solutions_2022() {
-        assert_eq!(run_solution_for_test(2022, 1, 1), 71506);
-        assert_eq!(run_solution_for_test(2022, 1, 2), 209603);
-    }
-
-    #[test]
-    fn check_known_solutions_2023() {}
 }
