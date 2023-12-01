@@ -13,6 +13,7 @@ mod valuemap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
+use std::convert::TryInto;
 
 use itertools::Itertools;
 
@@ -185,11 +186,22 @@ pub fn run_solution(
         (2022, 3, 2) => None,
         (2022, 4, 1) => None,
         (2022, 4, 2) => None,
+        (2023, 1, 1) => Some(
+            input_strings.map(|s| fix_calibration_line(&s)).sum()
+            ),
+        (2023, 1, 1) => None,
         _ => {
             println!("Puzzle solution not yet available");
             None
         }
     }
+}
+
+fn fix_calibration_line(s: &str) -> usize {
+    let mut iterator = s.chars().filter_map(|c| c.to_digit(10)).peekable();
+    let first_digit = iterator.peek().unwrap().clone();
+    let last_digit = iterator.last().unwrap();
+    (first_digit * 10 + last_digit).try_into().unwrap()
 }
 
 fn parse_input<T: std::str::FromStr, IS>(input_strings: IS) -> impl Iterator<Item = T>
@@ -261,8 +273,19 @@ mod tests {
 B X
 C Z"
             }
+            (2023, 1) => {
+                "1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet"
+            }
             _ => "",
         }
+    }
+
+    #[test]
+    fn check_examples_2023() {
+        assert_eq!(run_solution_for_example(2023, 1, 1), 142)
     }
 
     #[test]
