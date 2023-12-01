@@ -16,6 +16,7 @@ use std::path::{Path, PathBuf};
 use std::convert::TryInto;
 
 use itertools::Itertools;
+use regex::Regex;
 
 use crate::bingo::BingoState;
 use crate::bitaccumulator::DiagsReport;
@@ -189,7 +190,9 @@ pub fn run_solution(
         (2023, 1, 1) => Some(
             input_strings.map(|s| fix_calibration_line(&s)).sum()
             ),
-        (2023, 1, 1) => None,
+        (2023, 1, 2) => Some(
+            input_strings.map(|s| fix_calibration_line_with_string_digits(&s)).sum()
+            ),
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -202,6 +205,31 @@ fn fix_calibration_line(s: &str) -> usize {
     let first_digit = iterator.peek().unwrap().clone();
     let last_digit = iterator.last().unwrap();
     (first_digit * 10 + last_digit).try_into().unwrap()
+}
+
+fn fix_calibration_line_with_string_digits(s: &str) -> usize {
+    let digit_regex = Regex::new("one|two|three|four|five|six|seven|eight|nine|[0-9]").unwrap();
+    let first_digit = to_digit_incl_text(digit_regex.find(s).unwrap().as_str());
+    let last_digit = to_digit_incl_text(
+        Regex::new("(?:.*)(one|two|three|four|five|six|seven|eight|nine|[0-9])").unwrap().captures(s).unwrap().get(1).unwrap().as_str()
+        );
+    (first_digit * 10 + last_digit).try_into().unwrap()
+}
+
+fn to_digit_incl_text(s: &str) -> usize {
+    match s {
+        "0" => 0,
+        "one" | "1" => 1,
+        "two" | "2" => 2,
+        "three" | "3" => 3,
+        "four" | "4" => 4,
+        "five" | "5" => 5,
+        "six" | "6" => 6,
+        "seven" | "7" => 7,
+        "eight" | "8" => 8,
+        "nine" | "9" => 9,
+        _ => panic!()
+    }
 }
 
 fn parse_input<T: std::str::FromStr, IS>(input_strings: IS) -> impl Iterator<Item = T>
@@ -246,13 +274,13 @@ mod tests {
     }
 
     fn run_solution_for_example(year: usize, day: usize, puzzle: usize) -> usize {
-        let input_lines = example_input(year, day).lines().map(|s| s.to_string());
+        let input_lines = example_input(year, day, puzzle).lines().map(|s| s.to_string());
         run_solution(year, day, puzzle, input_lines).unwrap()
     }
 
-    fn example_input(year: usize, day: usize) -> &'static str {
-        match (year, day) {
-            (2022, 1) => {
+    fn example_input(year: usize, day: usize, puzzle: usize) -> &'static str {
+        match (year, day, puzzle) {
+            (2022, 1, _) => {
                 "1000
 2000
 3000
@@ -268,16 +296,25 @@ mod tests {
 
 10000"
             }
-            (2022, 2) => {
+            (2022, 2, _) => {
                 "A Y
 B X
 C Z"
             }
-            (2023, 1) => {
+            (2023, 1, 1) => {
                 "1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet"
+            }
+            (2023, 1, 2) => {
+                "two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen"
             }
             _ => "",
         }
@@ -285,7 +322,8 @@ treb7uchet"
 
     #[test]
     fn check_examples_2023() {
-        assert_eq!(run_solution_for_example(2023, 1, 1), 142)
+        assert_eq!(run_solution_for_example(2023, 1, 1), 142);
+        assert_eq!(run_solution_for_example(2023, 1, 2), 281);
     }
 
     #[test]
