@@ -1,14 +1,16 @@
-mod bingo;
-mod bitaccumulator;
-mod calories;
-mod command;
-mod coordinates;
-mod crabs;
-mod lanternfish;
-mod position;
-mod rockpaperscissors;
-mod segment_display;
-mod valuemap;
+mod old {
+    pub mod bingo;
+    pub mod bitaccumulator;
+    pub mod calories;
+    pub mod command;
+    pub mod coordinates;
+    pub mod crabs;
+    pub mod lanternfish;
+    pub mod position;
+    pub mod rockpaperscissors;
+    pub mod segment_display;
+    pub mod valuemap;
+}
 
 use std::convert::TryInto;
 use std::fs::File;
@@ -19,15 +21,16 @@ use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use regex::Regex;
 
-use crate::bingo::BingoState;
-use crate::bitaccumulator::DiagsReport;
-use crate::calories::CalorieCounter;
-use crate::command::Command;
-use crate::coordinates::{GridCounter, LineSegment};
-use crate::lanternfish::LanternShoal;
-use crate::position::Position;
-use crate::rockpaperscissors::score_guide_round;
-use crate::segment_display::{SegmentDisplay, SegmentMapping};
+use crate::old::bingo::BingoState;
+use crate::old::bitaccumulator::DiagsReport;
+use crate::old::calories::CalorieCounter;
+use crate::old::command::Command;
+use crate::old::coordinates::{GridCounter, LineSegment};
+use crate::old::lanternfish::LanternShoal;
+use crate::old::position::Position;
+use crate::old::rockpaperscissors::score_guide_round;
+use crate::old::segment_display::{SegmentDisplay, SegmentMapping};
+use crate::old::crabs;
 
 pub fn run_solution(
     year: usize,

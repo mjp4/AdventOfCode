@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use crate::command::{Command, CommandMethod};
+use crate::old::command::{Command, CommandMethod};
 
 #[derive(PartialEq, Debug)]
 pub struct Position {

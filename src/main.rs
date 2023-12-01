@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use aoc::{cargo_input_file_path, file_lines_as_strings, run_solution};
 use clap::{load_yaml, App};
 use std::path::PathBuf;
@@ -5,7 +6,7 @@ use std::time::Instant;
 
 fn main() {
     let yaml = load_yaml!("cli.yaml");
-    let matches = App::from(yaml).get_matches();
+    let matches = App::from_yaml(yaml).get_matches();
 
     let year: usize = matches.value_of_t("year").unwrap_or(2022);
     let day: usize = matches.value_of_t("DAY").unwrap_or(1);
