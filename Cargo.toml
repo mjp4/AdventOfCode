@@ -1,0 +1,17 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+authors = ["Mark Perryman <mark.perryman@metaswitch.com>"]
+edition = "2018"
+publish = ["metaswitch"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.75"
+clap = { version = "=3.0.0", features = ["yaml"] }
+itertools = "0.10.1"
+regex = "1.7.0"
+
+[dev-dependencies]
+test-case = "3.3.1"
