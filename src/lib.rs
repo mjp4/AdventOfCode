@@ -26,11 +26,11 @@ use crate::old::bitaccumulator::DiagsReport;
 use crate::old::calories::CalorieCounter;
 use crate::old::command::Command;
 use crate::old::coordinates::{GridCounter, LineSegment};
+use crate::old::crabs;
 use crate::old::lanternfish::LanternShoal;
 use crate::old::position::Position;
 use crate::old::rockpaperscissors::score_guide_round;
 use crate::old::segment_display::{SegmentDisplay, SegmentMapping};
-use crate::old::crabs;
 
 pub fn run_solution(
     year: usize,
@@ -198,11 +198,31 @@ pub fn run_solution(
                 .sum(),
         ),
         (2023, 7, 1) => {
-            let mut hands: Vec<_> = input_strings.filter_map(|s| CamelPokerHand::from_str(&s)).collect();
+            let mut hands: Vec<_> = input_strings
+                .filter_map(|s| CamelPokerHand::from_str(&s, false))
+                .collect();
             hands.sort();
-            Some(hands.iter().enumerate().map(|(rank, hand)| (rank + 1) * hand.bid).sum())
+            Some(
+                hands
+                    .iter()
+                    .enumerate()
+                    .map(|(rank, hand)| (rank + 1) * hand.bid)
+                    .sum(),
+            )
         }
-        (2023, 7, 2) => None,
+        (2023, 7, 2) => {
+            let mut hands: Vec<_> = input_strings
+                .filter_map(|s| CamelPokerHand::from_str(&s, true))
+                .collect();
+            hands.sort();
+            Some(
+                hands
+                    .iter()
+                    .enumerate()
+                    .map(|(rank, hand)| (rank + 1) * hand.bid)
+                    .sum(),
+            )
+        }
         _ => {
             println!("Puzzle solution not yet available");
             None
@@ -217,11 +237,11 @@ struct CamelPokerHand {
 }
 
 impl CamelPokerHand {
-    fn from_str(s: &str) -> Option<CamelPokerHand> {
+    fn from_str(s: &str, jokers: bool) -> Option<CamelPokerHand> {
         if let Ok(regex) = Regex::new(r"^([0-9AKQJT]+) (\d+)$") {
             if let Some(captures) = regex.captures(s) {
                 let try_hand = if let Some(hand_match) = captures.get(1) {
-                    Hand::from_str(hand_match.as_str())
+                    Hand::from_str(hand_match.as_str(), jokers)
                 } else {
                     None
                 };
@@ -231,7 +251,7 @@ impl CamelPokerHand {
                     None
                 };
                 if let (Some(hand), Some(bid)) = (try_hand, try_bid) {
-                    Some(CamelPokerHand {hand, bid})
+                    Some(CamelPokerHand { hand, bid })
                 } else {
                     None
                 }
@@ -256,23 +276,35 @@ enum Hand {
 }
 
 impl Hand {
-    fn from_str(s: &str) -> Option<Hand> {
-        let cards_in_hand: Vec<Card> = s.chars().flat_map(|c| Card::from_char(&c)).collect();
+    fn from_str(s: &str, jokers: bool) -> Option<Hand> {
+        let cards_in_hand: Vec<Card> = s
+            .chars()
+            .flat_map(|c| Card::from_char(&c, jokers))
+            .collect();
 
-        let (_, mut all_counts) = cards_in_hand.iter().fold(
-            (Vec::<Card>::new(), Vec::<u8>::new()),
-            |(mut cards, mut counts), &next_card| {
-                if let Some(card_position) = cards.iter().position(|&c| c == next_card) {
-                    counts[card_position] += 1
+        let (_, mut all_counts, joker_count) = cards_in_hand.iter().fold(
+            (Vec::<Card>::new(), Vec::<u8>::new(), 0),
+            |(mut cards, mut counts, joker_count), &next_card| {
+                if next_card == Card::Joker {
+                    (cards, counts, joker_count + 1)
+                } else if let Some(card_position) = cards.iter().position(|&c| c == next_card) {
+                    counts[card_position] += 1;
+                    (cards, counts, joker_count)
                 } else {
                     cards.push(next_card.clone());
-                    counts.push(1)
+                    counts.push(1);
+                    (cards, counts, joker_count)
                 }
-                (cards, counts)
-            }
+            },
         );
 
         all_counts.sort();
+        let counts_len = all_counts.len();
+        if counts_len > 0 {
+            all_counts[counts_len - 1] += joker_count;
+        } else {
+            all_counts.push(joker_count)
+        }
 
         match all_counts[..] {
             [5] => Some(Hand::FiveOfAKind(cards_in_hand)),
@@ -282,7 +314,7 @@ impl Hand {
             [1, 2, 2] => Some(Hand::TwoPair(cards_in_hand)),
             [1, 1, 1, 2] => Some(Hand::OnePair(cards_in_hand)),
             [1, 1, 1, 1, 1] => Some(Hand::HighCard(cards_in_hand)),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -298,12 +330,12 @@ enum Card {
 }
 
 impl Card {
-    fn from_char(c: &char) -> Option<Card> {
+    fn from_char(c: &char, jokers: bool) -> Option<Card> {
         match c {
             'A' => Some(Card::Ace),
             'K' => Some(Card::King),
             'Q' => Some(Card::Queen),
-            'J' => Some(Card::Jack),
+            'J' => Some(if jokers { Card::Joker } else { Card::Jack }),
             'T' => Some(Card::Number(10)),
             '9' => Some(Card::Number(9)),
             '8' => Some(Card::Number(8)),
@@ -399,15 +431,6 @@ mod tests {
     use super::*;
     use test_case::test_case;
 
-    #[test]
-    fn test_card_from_char() {
-        assert_eq!(Card::from_char(&'A'), Some(Card::Ace));
-        assert_eq!(Card::from_char(&'9'), Some(Card::Number(9)));
-        assert_eq!(Card::from_char(&'x'), None);
-        assert!(Card::Ace > Card::Number(7));
-        assert!(Card::Number(7) > Card::Number(2));
-    }
-
     fn run_solution_for_test(year: usize, day: usize, puzzle: usize) -> usize {
         let input_lines = file_lines_as_strings(&cargo_input_file_path(year, day));
         run_solution(year, day, puzzle, input_lines).unwrap()
@@ -478,7 +501,7 @@ QQQJA 483"
     #[test_case(2023, 1, 1, 142)]
     #[test_case(2023, 1, 2, 281)]
     #[test_case(2023, 7, 1, 6440)]
-    #[test_case(2023, 7, 2, 0)]
+    #[test_case(2023, 7, 2, 5905)]
     fn check_examples(year: usize, day: usize, puzzle: usize, result: usize) {
         assert_eq!(run_solution_for_example(year, day, puzzle), result)
     }
@@ -513,8 +536,8 @@ QQQJA 483"
 
     #[test_case(2023, 1, 1, 57346)]
     #[test_case(2023, 1, 2, 57345)]
-    #[test_case(2023, 7, 1, 0)]
-    #[test_case(2023, 7, 2, 0)]
+    #[test_case(2023, 7, 1, 252052080)]
+    #[test_case(2023, 7, 2, 252898370)]
     fn check_solutions(year: usize, day: usize, puzzle: usize, result: usize) {
         assert_eq!(run_solution_for_test(year, day, puzzle), result)
     }
