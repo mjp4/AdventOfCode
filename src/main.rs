@@ -16,7 +16,7 @@ fn main() {
         day, puzzle, year
     );
 
-    let input_path = match matches.value_of("input") {
+    let input_path = match matches.value_of("input_dir") {
         Some(input) => PathBuf::from(input),
         None => cargo_input_file_path(year, day),
     };

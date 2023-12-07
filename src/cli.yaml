@@ -7,16 +7,12 @@ args:
         short: y
         long: year
         value_name: YEAR
-        about: Which Advent of Code year do you want to run?
         takes_value: true
     - input_dir:
         short: i
         long: input
         value_name: PATH
-        about: Directory containing input files.
     - DAY:
-        about: Which day's task are you running?
         index: 1
     - PUZZLE:
-        about: Which puzzle are you running?
         index: 2
